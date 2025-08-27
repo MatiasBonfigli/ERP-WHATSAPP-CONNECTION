@@ -14,6 +14,7 @@
 const express = require('express');
 const { createWhatsappClient, removeWhatsappClient, loadContextIds, getAllClients, getClientById } = require('./functions/clientFunctions');
 const { sendWhatsappMessage } = require('./functions/helpers');
+const { addBroadcastJob } = require('./functions/queue');
 const router = express.Router();
 
 async function addNewClient(contextId) {
@@ -119,6 +120,40 @@ router.post("/sendmessage", async (req, res) => {
     : res.status(400).send(stmessage);
     
 
+});
+
+router.post("/broadcast", async (req, res) => {
+    const { phoneNumbers, message, filesUrl, contextId } = req.body;
+
+    if (!phoneNumbers || !Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
+        return res.status(400).json({ error: "phoneNumbers must be a non-empty array." });
+    }
+
+    const client = getClientById(contextId);
+
+    if (!client) {
+        const numbers = getAllClients();
+        return res.status(404).json({
+            message: `WhatsApp client with id ${contextId} not found.`,
+            errored_context_id: contextId,
+            available_numbers: numbers
+        });
+    }
+
+    for (const phoneNumber of phoneNumbers) {
+        await addBroadcastJob({
+            phoneNumber,
+            message,
+            filesUrl,
+            contextId,
+        });
+    }
+
+    res.status(202).json({
+        message: "Broadcast request accepted. Messages are being queued for sending.",
+        contextId: contextId,
+        total_numbers: phoneNumbers.length
+    });
 });
 
 

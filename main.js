@@ -4,6 +4,7 @@ const cors = require('cors'); // Importa el paquete cors
 
 const whatsappRoutes = require("./enpoints/whatsapp/whatsappRoutes");
 const { loadContextIds, createWhatsappClient } = require('./enpoints/whatsapp/functions/clientFunctions');
+require('./enpoints/whatsapp/functions/queue'); // This will start the queue worker
 
 const app = express();
 app.use(express.json({ limit: '1000mb' }));

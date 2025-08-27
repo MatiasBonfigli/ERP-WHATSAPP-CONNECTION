@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WhatsApp API",
+    "description": "API for sending WhatsApp messages and broadcasts.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/whatsapp/add": {
+      "post": {
+        "summary": "Add a new WhatsApp client",
+        "description": "Generates a QR code to link a new WhatsApp account. The QR code is returned as an image file path.",
+        "responses": {
+          "200": {
+            "description": "QR code generated successfully or client already initialized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "qr": {
+                      "type": "string",
+                      "description": "Absolute path to the QR code image file.",
+                      "example": "C:\\path\\to\\QRS\\QR-WHATSAPP-....jpg"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message indicating the client is already initialized.",
+                        "example": "Cliente ya inicializado y listo para usar."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "205": {
+            "description": "Error generating QR code."
+          }
+        }
+      }
+    },
+    "/whatsapp/logout": {
+      "post": {
+        "summary": "Logout a WhatsApp client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contextId": {
+                    "type": "string",
+                    "description": "The ID of the client to logout."
+                  }
+                },
+                "required": ["contextId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client logged out successfully."
+          },
+          "500": {
+            "description": "Error logging out client."
+          }
+        }
+      }
+    },
+    "/whatsapp/getnumbers": {
+      "post": {
+        "summary": "Get all connected WhatsApp numbers",
+        "responses": {
+          "200": {
+            "description": "A list of connected numbers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "numbers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "contextId": {
+                            "type": "string"
+                          },
+                          "phone_number": {
+                            "type": "string"
+                          },
+                          "push_name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/whatsapp/sendmessage": {
+      "post": {
+        "summary": "Send a single WhatsApp message",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "filesUrl": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Array of local file paths for attachments."
+                  },
+                  "contextId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["phoneNumber", "message", "contextId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully."
+          },
+          "400": {
+            "description": "Error sending message."
+          },
+          "555": {
+            "description": "Client not found."
+          }
+        }
+      }
+    },
+    "/whatsapp/broadcast": {
+      "post": {
+        "summary": "Send a broadcast message",
+        "description": "Sends a message to a list of phone numbers, respecting rate and daily limits.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phoneNumbers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "filesUrl": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Array of local file paths for attachments."
+                  },
+                  "contextId": {
+                    "type": "string"
+                  }
+                },
+                "required": ["phoneNumbers", "message", "contextId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Broadcast request accepted and queued."
+          },
+          "400": {
+            "description": "Invalid input."
+          },
+          "404": {
+            "description": "Client not found."
+          }
+        }
+      }
+    }
+  }
+}
