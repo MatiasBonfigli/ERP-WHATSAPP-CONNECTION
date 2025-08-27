@@ -70,4 +70,9 @@ const addBroadcastJob = async (data) => {
     await broadcastQueue.add('broadcast-job', data);
 };
 
-module.exports = { addBroadcastJob, broadcastQueue };
+module.exports = {
+    addBroadcastJob,
+    broadcastQueue,
+    redisConnection: connection,
+    getTodaysCountKey
+};

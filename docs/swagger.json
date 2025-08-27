@@ -203,6 +203,58 @@
           }
         }
       }
+    },
+    "/whatsapp/broadcast/status": {
+      "get": {
+        "summary": "Get broadcast queue status",
+        "description": "Retrieves the current status and statistics of the broadcast message queue.",
+        "responses": {
+          "200": {
+            "description": "Queue status retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "The overall status of the queue.",
+                      "example": "running"
+                    },
+                    "dailySentCount": {
+                      "type": "integer",
+                      "description": "The number of messages sent today."
+                    },
+                    "queue": {
+                      "type": "object",
+                      "properties": {
+                        "sentCount": {
+                          "type": "integer"
+                        },
+                        "pendingCount": {
+                          "type": "integer"
+                        },
+                        "activeCount": {
+                          "type": "integer"
+                        },
+                        "delayedCount": {
+                          "type": "integer"
+                        },
+                        "failedCount": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve queue status."
+          }
+        }
+      }
     }
   }
 }

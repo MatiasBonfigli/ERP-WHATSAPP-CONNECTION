@@ -14,7 +14,7 @@
 const express = require('express');
 const { createWhatsappClient, removeWhatsappClient, loadContextIds, getAllClients, getClientById } = require('./functions/clientFunctions');
 const { sendWhatsappMessage } = require('./functions/helpers');
-const { addBroadcastJob } = require('./functions/queue');
+const { addBroadcastJob, broadcastQueue, redisConnection, getTodaysCountKey } = require('./functions/queue');
 const router = express.Router();
 
 async function addNewClient(contextId) {
@@ -154,6 +154,41 @@ router.post("/broadcast", async (req, res) => {
         contextId: contextId,
         total_numbers: phoneNumbers.length
     });
+});
+
+router.get("/broadcast/status", async (req, res) => {
+    try {
+        const sentCount = await broadcastQueue.getCompletedCount();
+        const pendingCount = await broadcastQueue.getWaitingCount();
+        const activeCount = await broadcastQueue.getActiveCount();
+        const delayedCount = await broadcastQueue.getDelayedCount();
+        const failedCount = await broadcastQueue.getFailedCount();
+
+        const todaysCountKey = getTodaysCountKey();
+        const dailySentCount = parseInt(await redisConnection.get(todaysCountKey) || '0', 10);
+
+        let status = "running";
+        if (dailySentCount >= 900 && (pendingCount > 0 || activeCount > 0 || delayedCount > 0)) {
+            status = "paused_daily_limit";
+        } else if (pendingCount === 0 && activeCount === 0) {
+            status = "idle";
+        }
+
+        res.status(200).json({
+            status,
+            dailySentCount,
+            queue: {
+                sentCount,
+                pendingCount,
+                activeCount,
+                delayedCount,
+                failedCount
+            }
+        });
+    } catch (error) {
+        console.error("Failed to retrieve queue status:", error);
+        res.status(500).json({ error: "Failed to retrieve queue status." });
+    }
 });
 
 
