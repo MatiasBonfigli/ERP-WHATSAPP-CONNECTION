@@ -4,11 +4,18 @@ echo        WhatsApp API Auto-Updater (NSSM)
 echo =================================================
 echo.
 
-:: Navigate to the script's directory to ensure commands run in the project root
-cd /d "%~dp0"
+:: The installer clones the project to C:\ERP-WHATSAPP-CONNECTION
+:: The scheduled task should run this script from that directory.
+set "PROJECT_DIR=C:\ERP-WHATSAPP-CONNECTION"
+cd /d "%PROJECT_DIR%"
+if not exist "%PROJECT_DIR%\main.js" (
+    echo Project directory not found at %PROJECT_DIR%.
+    echo Cannot continue with the update.
+    exit /b 1
+)
 
 set "SERVICE_NAME=waapi"
-set "NSSM_EXE_PATH=%CD%\bin\nssm.exe"
+set "NSSM_EXE_PATH=%PROJECT_DIR%\bin\nssm.exe"
 
 if not exist "%NSSM_EXE_PATH%" (
     echo "NSSM executable not found at %NSSM_EXE_PATH%"
@@ -16,15 +23,20 @@ if not exist "%NSSM_EXE_PATH%" (
     exit /b 1
 )
 
-echo --- Checking for updates...
-:: Fetch the latest changes from the remote, but don't apply them yet
-git fetch
+echo --- Ensuring we are on the main branch...
+git checkout main
 
-:: Check if the local branch is behind the remote branch
-git status -uno | findstr /B /C:"Your branch is behind"
+echo --- Checking for updates on the main branch...
+:: Fetch the latest changes from the remote
+git fetch origin
+
+:: Compare local main with remote main
+git rev-list --left-right --count main...origin/main | findstr /R "^0[	]0$" >nul
 if %errorlevel% equ 0 (
-    echo --- Updates found. Pulling changes...
-    git pull
+    echo --- No new updates found. The API is already up to date.
+) else (
+    echo --- Updates found. Pulling changes for the main branch...
+    git pull origin main
 
     echo.
     echo --- Installing/updating dependencies...
@@ -36,8 +48,6 @@ if %errorlevel% equ 0 (
 
     echo.
     echo --- Update process complete.
-) else (
-    echo --- No new updates found. The API is already up to date.
 )
 
 echo.
