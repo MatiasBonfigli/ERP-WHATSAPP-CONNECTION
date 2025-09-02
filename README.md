@@ -2,14 +2,14 @@
 
 This project is a Node.js-based API for sending WhatsApp messages, with a robust broadcast system that uses a message queue to handle large volumes of messages while respecting rate limits.
 
-It also includes scripts to automate the installation and update process on Windows.
+It also includes scripts to automate the installation and update process on Windows, using **NSSM (the Non-Sucking Service Manager)** for maximum reliability.
 
 ## Features
 
 - **Standard Message Sending:** Send text and media messages via a simple API endpoint.
 - **Broadcast Endpoint:** Send messages to a large list of numbers.
 - **Message Queue:** Powered by Redis and BullMQ, ensures messages are sent reliably, respecting a rate limit (10 messages / 3 seconds) and a daily cap (900 messages/day).
-- **Automated Installation:** A one-time `install.bat` script to set up the entire environment.
+- **Automated Installation:** A one-time `install.bat` script to set up the entire environment and create a Windows Service.
 - **Automated Updates:** An `auto_update.bat` script that can be scheduled to keep the API up-to-date with the latest code from the Git repository.
 
 ---
@@ -22,19 +22,18 @@ To get started, simply run the `install.bat` script as an administrator.
 2.  Select **"Run as administrator"**.
 
 This script will perform the following actions:
-- **Request Administrator Privileges:** Necessary to install software.
-- **Install Dependencies:** It will check for and automatically install Node.js, Git, and Redis using the `winget` package manager if they are not already present on your system.
-- **Install Project Modules:** It runs `npm install` to download all the necessary Node.js packages for the project.
-- **Start the API:** It uses `pm2`, a process manager for Node.js, to start the API.
-- **Enable Auto-Reboot:** It configures `pm2` to automatically restart the API whenever the server reboots.
+- **Request Administrator Privileges:** Necessary to install software and create a Windows service.
+- **Install Core Dependencies:** It will check for and automatically install Node.js, Git, and Redis using the `winget` package manager if they are not already present.
+- **Install Project Modules:** It runs `npm install` to download all the necessary Node.js packages.
+- **Setup and Start the Service:** It downloads `nssm.exe` and uses it to create a new Windows Service named **`waapi`**. This service runs the API in the background and is automatically configured to start when the computer boots up.
 
-After the script finishes, the API will be running in the background.
+After the script finishes, the API will be running as a true Windows Service. You can manage it from the Windows Services application (`services.msc`).
 
 ---
 
 ## 2. Auto-Update Setup (Optional)
 
-The `auto_update.bat` script is designed to automatically check for new updates from the Git repository, install any new dependencies, and restart the API to apply the changes.
+The `auto_update.bat` script is designed to automatically check for new updates from the Git repository, install any new dependencies, and restart the `waapi` service to apply the changes.
 
 To make this process fully automatic, you should set up a **Windows Scheduled Task** to run this script periodically (e.g., every hour).
 
